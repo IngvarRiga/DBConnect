@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2015
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "plgDBConnect", "plgDBConnect.csproj", "{04E4CB47-F9B9-4038-AEBA-64934746E393}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Restricted|Any CPU = Restricted|Any CPU
+		WindowsXP (.NET 4.0)|Any CPU = WindowsXP (.NET 4.0)|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{04E4CB47-F9B9-4038-AEBA-64934746E393}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04E4CB47-F9B9-4038-AEBA-64934746E393}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04E4CB47-F9B9-4038-AEBA-64934746E393}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04E4CB47-F9B9-4038-AEBA-64934746E393}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04E4CB47-F9B9-4038-AEBA-64934746E393}.Restricted|Any CPU.ActiveCfg = Release|Any CPU
+		{04E4CB47-F9B9-4038-AEBA-64934746E393}.Restricted|Any CPU.Build.0 = Release|Any CPU
+		{04E4CB47-F9B9-4038-AEBA-64934746E393}.WindowsXP (.NET 4.0)|Any CPU.ActiveCfg = Release|Any CPU
+		{04E4CB47-F9B9-4038-AEBA-64934746E393}.WindowsXP (.NET 4.0)|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DA966771-7411-425A-8163-B76EDC55A357}
+	EndGlobalSection
+EndGlobal
