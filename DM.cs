@@ -101,7 +101,7 @@ namespace plgDBConnect
         MainDB.fServerStateType = ServerStateType;
         //-- данные соединения с основной базой данных хранятся внутри статического экземпляра
         //-- и используются по умолчанию, если не задается параметр Connector в вызывающих функциях
-        return null;
+        return MainDB;
       }
       else
       {
