@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.IO;
+using System.Data.Common;
+using System.Threading.Tasks;
 
 //-- использование библиотек доступа к SQLite
 #if SQLITE
@@ -349,6 +351,27 @@ namespace plgDBConnect
         ThrowException(ex);
       }
       return res;
+    }
+
+    public override async void OpenAsync()
+    {
+      if (db?.State == ConnectionState.Closed)
+      {
+        try
+        {
+          await db.OpenAsync();
+        }
+        catch (Exception ex)
+        {
+          LastSQL = "Вызов функции Open()";
+          ThrowException(ex);
+        }
+      }
+    }
+
+    public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand Cmd)
+    {
+      throw new NotImplementedException();
     }
 
     #endregion

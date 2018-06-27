@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
-
+using System.Data.Common;
+using System.Threading.Tasks;
 #if POSTGRESQL
 using Npgsql;
 
@@ -218,6 +219,22 @@ namespace plgDBConnect
       }
     }
 
+    public override async void OpenAsync()
+    {
+      if (db?.State == ConnectionState.Closed)
+      {
+        try
+        {
+          await db.OpenAsync();
+        }
+        catch (Exception ex)
+        {
+          LastSQL = "Вызов функции Open()";
+          ThrowException(ex);
+        }
+      }
+    }
+
     /// <summary>
     /// Закрытие соединения с базой данных.
     /// </summary>
@@ -335,6 +352,20 @@ namespace plgDBConnect
       return res;
     }
 
+    public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
+    {
+      if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+      LastSQL = cmd.CommandText;
+      try
+      {
+         return ((NpgsqlCommand)cmd).ExecuteReaderAsync();
+      }
+      catch (Exception ex)
+      {
+        ThrowException(ex);
+      }
+      return null;
+    }
     #endregion
   }
 }
