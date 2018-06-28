@@ -12,7 +12,7 @@ using System.Data.SQLite;
 namespace plgDBConnect
 {
   /// <summary>
-  /// Класс, обеспечивающий соединение с БД SQLite через интерфейсную библиотеку 
+  /// Класс, обеспечивающий соединение с БД SQLite через интерфейсную библиотеку
   /// </summary>
   public class plgSQLiteConnect : IplgDBConnect
   {
@@ -46,10 +46,10 @@ namespace plgDBConnect
     //-- Конструктор класса сразу инициализирует соединение с БД
     public plgSQLiteConnect(
       string DB, //-- пользователь, под которым производится соединение
-      string pass, //-- пароль раскодирования БД 
+      string pass, //-- пароль раскодирования БД
       int Timeout = 120)
     {
-      //-- инициализация необходимых переменных 
+      //-- инициализация необходимых переменных
       csb = new SQLiteConnectionStringBuilder();
       //-- настройка соединения с сервером и БД
       //   csb.AddHost = Host;     //-- Хост, на котором развернута БД
@@ -57,8 +57,8 @@ namespace plgDBConnect
       csb.DataSource = DB; //-- полный путь до БД
       //csb.UserName = user; //-- пользователь
       csb.DefaultTimeout = Timeout;
-      //-- время задается в секундах, по умолчанию - 20 секунд, а потом генерируется ошибка
-      // csb.SyncNotification = true; //-- 
+      //-- время задается в секундах, по умолчанию - 120 секунд, а потом генерируется ошибка
+      // csb.SyncNotification = true; //--
       if (!string.IsNullOrEmpty(pass))
       {
         csb.Password = pass; //-- Пароль кодирования / раскодирования БД
@@ -69,7 +69,7 @@ namespace plgDBConnect
       {
         //-- файла не существует!
         throw new ArgumentException($"База данных SQLite « {DB} » не найдена");
-      } 
+      }
       try
       {
         db = new SQLiteConnection(ConnectString);
@@ -258,7 +258,7 @@ namespace plgDBConnect
       else
         throw new DBConnectException(string.Format(Properties.Resources.errParametrAlreadyDefined, ParamName));
     }
-    
+
     public override IDataReader ExecuteReader(IDbCommand cmd)
     {
       IDataReader res = null;
@@ -369,9 +369,19 @@ namespace plgDBConnect
       }
     }
 
-    public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand Cmd)
+    public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
     {
-      throw new NotImplementedException();
+      if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+      LastSQL = cmd.CommandText;
+      try
+      {
+        return ((SQLiteCommand)cmd).ExecuteReaderAsync();
+      }
+      catch (Exception ex)
+      {
+        ThrowException(ex);
+      }
+      return null;
     }
 
     #endregion
