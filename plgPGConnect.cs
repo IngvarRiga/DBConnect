@@ -124,9 +124,9 @@ namespace plgDBConnect
       Cmd.Transaction = tr ?? throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
       try
       {
+        LastSQL = Cmd.CommandText;
         using (var ad = new NpgsqlDataAdapter((NpgsqlCommand)Cmd))
         {
-          LastSQL = Cmd.CommandText;
           res = ad.Fill(tbl);
         }
       }
@@ -147,11 +147,11 @@ namespace plgDBConnect
       tbl.Clear();
       try
       {
+        LastSQL = Cmd;
         using (var SQLEx = new NpgsqlCommand(Cmd, db, (NpgsqlTransaction)tr))
         {
           using (var ad = new NpgsqlDataAdapter(SQLEx))
           {
-            LastSQL = Cmd;
             res = ad.Fill(tbl);
           }
         }
@@ -300,9 +300,9 @@ namespace plgDBConnect
       if (tr == null) throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
       try
       {
+        LastSQL = SQL;
         using (var cmd = new NpgsqlCommand(SQL, db, (NpgsqlTransaction)tr))
         {
-          LastSQL = SQL;
           Res = cmd.ExecuteNonQuery();
         }
       }
@@ -321,9 +321,9 @@ namespace plgDBConnect
       if (tr == null) throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
       try
       {
+        LastSQL = SQL;
         using (var cmd = new NpgsqlCommand(SQL, db, (NpgsqlTransaction)tr))
         {
-          LastSQL = SQL;
           Res = cmd.ExecuteScalar();
         }
       }

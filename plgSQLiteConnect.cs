@@ -132,9 +132,9 @@ namespace plgDBConnect
       Cmd.Transaction = tr ?? throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
       try
       {
+        LastSQL = Cmd.CommandText;
         using (var ad = new SQLiteDataAdapter((SQLiteCommand)Cmd))
         {
-          LastSQL = Cmd.CommandText;
           res = ad.Fill(tbl);
         }
       }
@@ -155,11 +155,11 @@ namespace plgDBConnect
       tbl.Clear();
       try
       {
+        LastSQL = Cmd;
         using (var SQLEx = new SQLiteCommand(Cmd, db, (SQLiteTransaction)tr))
         {
           using (var ad = new SQLiteDataAdapter(SQLEx))
           {
-            LastSQL = Cmd;
             res = ad.Fill(tbl);
           }
         }
@@ -301,9 +301,9 @@ namespace plgDBConnect
       if (tr == null) throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
       try
       {
+        LastSQL = SQL;
         using (var cmd = new SQLiteCommand(SQL, db, (SQLiteTransaction)tr))
         {
-          LastSQL = SQL;
           Res = cmd.ExecuteNonQuery();
         }
       }
@@ -322,9 +322,9 @@ namespace plgDBConnect
       if (tr == null) throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
       try
       {
+        LastSQL = SQL;
         using (var cmd = new SQLiteCommand(SQL, db, (SQLiteTransaction)tr))
         {
-          LastSQL = SQL;
           Res = cmd.ExecuteScalar();
         }
       }
