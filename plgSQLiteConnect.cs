@@ -17,7 +17,7 @@ namespace plgDBConnect
   public class plgSQLiteConnect : IplgDBConnect
   {
 
-    #region Внутренние члены класса
+#region Внутренние члены класса
 
     SQLiteConnectionStringBuilder csb; //-- формирование строки соединения
     string ConnectString; //-- сформированная строка соединения
@@ -25,7 +25,7 @@ namespace plgDBConnect
     SQLiteTransaction tr; //-- транзакция
     string LastSQL;
 
-    #endregion
+#endregion
 
     //-----------------------------------------------------------------------------------------------------
 
@@ -104,7 +104,7 @@ namespace plgDBConnect
 
     //---------------------------------------------------------------------------
 
-    #region -- Реализация интерфейса IplgDBConnect --
+#region -- Реализация интерфейса IplgDBConnect --
 
     public override string GetLastSQL()
     {
@@ -384,7 +384,7 @@ namespace plgDBConnect
       return null;
     }
 
-    #endregion
+#endregion
   }
 }
 

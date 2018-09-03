@@ -52,6 +52,10 @@ namespace plgDBConnect
   /// </summary>
   public static class DM
   {
+    /// <summary>
+    /// Последний выполненный запрос, важен для отслеживания ошибок
+    /// </summary>
+    private static string LastSQL = string.Empty;
     /*
      Под основным коннектором подразумевается соединение с базой данных, которая является основной (приоритетной) при работе с программой,
      что, в большинстве случаев и происходит. Т.е. программа работает только с одной конкретной базой данных. Однако, в некоторых случаях
@@ -151,6 +155,14 @@ namespace plgDBConnect
     }
 
     /// <summary>
+    /// Получение последнего выполняемого запроса
+    /// </summary>
+    /// <returns></returns>
+    public static string GetLastSQL()
+    {
+      return LastSQL;
+    }
+    /// <summary>
     /// Функция загрузки или обновления содержимого всей таблицы. При обновлении сперва уничтожаются все данные, которые находятся в таблице
     /// Транзакция задается внутри фукнции, т.е. запрос выполняется внутри своей транзакции
     /// </summary>
@@ -161,6 +173,7 @@ namespace plgDBConnect
       var res = true;
       Table.BeginLoadData();
       if (con == null) con = MainDB;
+      LastSQL = SQL;
       using (var db = GetConnect(con))
       {
         try
@@ -197,6 +210,7 @@ namespace plgDBConnect
     public static void ExecNoQuery( string SQL, Connector con=null, int ErrorTime = 120)
     {
       if (con == null) con = MainDB;
+      LastSQL = SQL;
       using (var db = GetConnect(con, ErrorTime))
       {
         try
@@ -229,6 +243,8 @@ namespace plgDBConnect
     public static void ExecNoQuery( IDbCommand SQL, Connector con=null, int ErrorTime = 120)
     {
       if (con == null) con = MainDB;
+      LastSQL = SQL.CommandText;
+
       using (var db = GetConnect(con))
       {
         try
@@ -262,6 +278,7 @@ namespace plgDBConnect
     {
       object obj = null;
       if (con == null) con = MainDB;
+      LastSQL = SQL;
       using (var db = GetConnect(con))
       {
         try
@@ -296,6 +313,7 @@ namespace plgDBConnect
     {
       object obj = null;
       if (con == null) con = MainDB;
+      LastSQL = SQL.CommandText;
       using (var db = GetConnect(con))
       {
         try
