@@ -89,7 +89,7 @@ namespace plgDBConnect
         //-- примерная позиция ошибки
         nex.errSqlPos = ((PostgresException)(nex.InnerException)).Position;
         //-- текст ошибки
-        nex.errMessage = ex.Message; 
+        nex.errMessage = ex.Message;
       }
       throw nex;
     }
@@ -206,33 +206,15 @@ namespace plgDBConnect
     /// </summary>
     public override void Open()
     {
-      if (db?.State == ConnectionState.Closed)
+      if (db?.State != ConnectionState.Closed) return;
+      try
       {
-        try
-        {
-          db.Open();
-        }
-        catch (Exception ex)
-        {
-          LastSQL = "Вызов функции Open()";
-          ThrowException(ex);
-        }
+        db.Open();
       }
-    }
-
-    public override async void OpenAsync()
-    {
-      if (db?.State == ConnectionState.Closed)
+      catch (Exception ex)
       {
-        try
-        {
-          await db.OpenAsync();
-        }
-        catch (Exception ex)
-        {
-          LastSQL = "Вызов функции Open()";
-          ThrowException(ex);
-        }
+        LastSQL = "Вызов функции Open()";
+        ThrowException(ex);
       }
     }
 
@@ -259,25 +241,11 @@ namespace plgDBConnect
         throw new DBConnectException(string.Format(Properties.Resources.errParametrAlreadyDefined, ParamName));
     }
 
-    public override IDataReader ExecuteReader(IDbCommand cmd)
-    {
-      IDataReader res = null;
-      if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
-      LastSQL = cmd.CommandText;
-      try
-      {
-        res = cmd.ExecuteReader();
-      }
-      catch (Exception ex)
-      {
-        ThrowException(ex);
-      }
-      return res;
-    }
+
 
     public override int ExecuteNonQuery(IDbCommand cmd, IDbTransaction tr = null)
     {
-      int res = -1;
+      var res = -1;
       if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
       if (db.State == ConnectionState.Closed) throw new DBConnectException(Properties.Resources.errDataBaseNotConnected);
       cmd.Transaction = tr ?? throw new Exception(Properties.Resources.errTransactionNotDefined);
@@ -295,7 +263,7 @@ namespace plgDBConnect
 
     public override int ExecuteNonQuery(string SQL, IDbTransaction tr = null)
     {
-      int Res = -1;
+      var Res = -1;
       if (string.IsNullOrEmpty(SQL)) throw new DBConnectException(Properties.Resources.errCommandNotDefined);
       if (db.State == ConnectionState.Closed) throw new DBConnectException(Properties.Resources.errDataBaseNotConnected);
       if (tr == null) throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
@@ -352,21 +320,59 @@ namespace plgDBConnect
       }
       return res;
     }
-
-    public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
+    
+    public override IDataReader ExecuteReader(IDbCommand cmd)
     {
+      IDataReader res = null;
       if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
       LastSQL = cmd.CommandText;
       try
       {
-         return ((NpgsqlCommand)cmd).ExecuteReaderAsync();
+        res = cmd.ExecuteReader();
       }
       catch (Exception ex)
       {
         ThrowException(ex);
       }
-      return null;
+      return res;
+    } 
+    #region -- Функции асинхронной работы с базой данных
+
+    /*
+ public override async void OpenAsync()
+    {
+      if (db?.State == ConnectionState.Closed)
+      {
+        try
+        {
+          await db.OpenAsync();
+        }
+        catch (Exception ex)
+        {
+          LastSQL = "Вызов функции Open()";
+          ThrowException(ex);
+        }
+      }
     }
+
+
+
+    public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
+     {
+       throw new NotImplementedException("ExecuteReaderAsync для PostgreSQL временно отключен");
+       if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+       LastSQL = cmd.CommandText;
+       try
+       {
+          return ((NpgsqlCommand)cmd).ExecuteReaderAsync();
+       }
+       catch (Exception ex)
+       {
+         ThrowException(ex);
+       }
+       return null;
+     }*/
+    #endregion
     #endregion
   }
 }

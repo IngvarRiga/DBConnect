@@ -17,7 +17,7 @@ namespace plgDBConnect
   public class plgSQLiteConnect : IplgDBConnect
   {
 
-#region Внутренние члены класса
+    #region Внутренние члены класса
 
     SQLiteConnectionStringBuilder csb; //-- формирование строки соединения
     string ConnectString; //-- сформированная строка соединения
@@ -25,7 +25,7 @@ namespace plgDBConnect
     SQLiteTransaction tr; //-- транзакция
     string LastSQL;
 
-#endregion
+    #endregion
 
     //-----------------------------------------------------------------------------------------------------
 
@@ -104,7 +104,7 @@ namespace plgDBConnect
 
     //---------------------------------------------------------------------------
 
-#region -- Реализация интерфейса IplgDBConnect --
+    #region -- Реализация интерфейса IplgDBConnect --
 
     public override string GetLastSQL()
     {
@@ -209,11 +209,11 @@ namespace plgDBConnect
       if (db == null) { return; }
       if (db.State != ConnectionState.Closed)
       {
-/*        if (tr != null)
-        {
-          tr.Rollback();
-          tr.Dispose();
-        }*/
+        /*        if (tr != null)
+                {
+                  tr.Rollback();
+                  tr.Dispose();
+                }*/
       }
     }
 
@@ -259,25 +259,10 @@ namespace plgDBConnect
         throw new DBConnectException(string.Format(Properties.Resources.errParametrAlreadyDefined, ParamName));
     }
 
-    public override IDataReader ExecuteReader(IDbCommand cmd)
-    {
-      IDataReader res = null;
-      if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
-      LastSQL = cmd.CommandText;
-      try
-      {
-        res = cmd.ExecuteReader();
-      }
-      catch (Exception ex)
-      {
-        ThrowException(ex);
-      }
-      return res;
-    }
 
     public override int ExecuteNonQuery(IDbCommand cmd, IDbTransaction tr = null)
     {
-      int res = -1;
+      var res = -1;
       if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
       if (db.State == ConnectionState.Closed) throw new DBConnectException(Properties.Resources.errDataBaseNotConnected);
       cmd.Transaction = tr ?? throw new Exception(Properties.Resources.errTransactionNotDefined);
@@ -353,38 +338,59 @@ namespace plgDBConnect
       return res;
     }
 
-    public override async void OpenAsync()
+    public override IDataReader ExecuteReader(IDbCommand cmd)
     {
-      if (db?.State == ConnectionState.Closed)
-      {
-        try
-        {
-          await db.OpenAsync();
-        }
-        catch (Exception ex)
-        {
-          LastSQL = "Вызов функции Open()";
-          ThrowException(ex);
-        }
-      }
-    }
-
-    public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
-    {
+      IDataReader res = null;
       if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
       LastSQL = cmd.CommandText;
       try
       {
-        return ((SQLiteCommand)cmd).ExecuteReaderAsync();
+        res = cmd.ExecuteReader();
       }
       catch (Exception ex)
       {
         ThrowException(ex);
       }
-      return null;
+      return res;
     }
 
-#endregion
+    #region -- Функции асинхронной работы с базой данных
+    /* public override async void OpenAsync()
+     {
+       if (db?.State == ConnectionState.Closed)
+       {
+         try
+         {
+           await db.OpenAsync();
+         }
+         catch (Exception ex)
+         {
+           LastSQL = "Вызов функции Open()";
+           ThrowException(ex);
+         }
+       }
+     }
+
+     public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
+     {
+       if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+       LastSQL = cmd.CommandText;
+       try
+       {
+         return ((SQLiteCommand)cmd).ExecuteReaderAsync();
+       }
+       catch (Exception ex)
+       {
+         ThrowException(ex);
+       }
+       return null;
+     }
+
+
+  */
+    #endregion
+
+    #endregion
   }
 }
 

@@ -119,11 +119,11 @@ namespace plgDBConnect
     /// </summary>
     public abstract void Open();
 
-    /// <summary>
+   /* /// <summary>
     /// ќткрытие соединени€ с базой данных, с использованием строки соединени€, инициализированной в контрукторе
     /// </summary>
-    public abstract void OpenAsync();
-
+   // public abstract void OpenAsync();
+   */
     /// <summary>
     /// «акрытие соединени€ с базой данных.
     /// </summary>
@@ -134,8 +134,9 @@ namespace plgDBConnect
     /// </summary>
     /// <returns>»нтерфейс IDataReader</returns>
     public abstract IDataReader ExecuteReader(IDbCommand Cmd);
-    public abstract Task<DbDataReader> ExecuteReaderAsync(IDbCommand Cmd);
 
+   // public abstract Task<DbDataReader> ExecuteReaderAsync(IDbCommand Cmd);
+   
     /// <summary>
     /// –ализаци€ интерфейса IDisposable, очистка внутренних данных класса
     /// </summary>
