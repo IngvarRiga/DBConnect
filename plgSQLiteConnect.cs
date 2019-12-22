@@ -355,7 +355,7 @@ namespace plgDBConnect
     }
 
     #region -- Функции асинхронной работы с базой данных
-    /* public override async void OpenAsync()
+     public override async void OpenAsync()
      {
        if (db?.State == ConnectionState.Closed)
        {
@@ -365,19 +365,19 @@ namespace plgDBConnect
          }
          catch (Exception ex)
          {
-           LastSQL = "Вызов функции Open()";
+           LastSQL = "Вызов асинхронной функции Open()";
            ThrowException(ex);
          }
        }
      }
 
-     public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
+     public override async Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
      {
        if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
        LastSQL = cmd.CommandText;
        try
        {
-         return ((SQLiteCommand)cmd).ExecuteReaderAsync();
+         return await ((SQLiteCommand)cmd).ExecuteReaderAsync();
        }
        catch (Exception ex)
        {
@@ -387,7 +387,7 @@ namespace plgDBConnect
      }
 
 
-  */
+  
     #endregion
 
     #endregion

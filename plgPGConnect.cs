@@ -320,7 +320,7 @@ namespace plgDBConnect
       }
       return res;
     }
-    
+
     public override IDataReader ExecuteReader(IDbCommand cmd)
     {
       IDataReader res = null;
@@ -335,11 +335,11 @@ namespace plgDBConnect
         ThrowException(ex);
       }
       return res;
-    } 
+    }
     #region -- Функции асинхронной работы с базой данных
 
-    /*
- public override async void OpenAsync()
+
+    public override async void OpenAsync()
     {
       if (db?.State == ConnectionState.Closed)
       {
@@ -349,29 +349,27 @@ namespace plgDBConnect
         }
         catch (Exception ex)
         {
-          LastSQL = "Вызов функции Open()";
+          LastSQL = "Вызов асинхронной функции Open()";
           ThrowException(ex);
         }
       }
     }
-
-
-
-    public override Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
-     {
-       throw new NotImplementedException("ExecuteReaderAsync для PostgreSQL временно отключен");
-       if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
-       LastSQL = cmd.CommandText;
-       try
-       {
-          return ((NpgsqlCommand)cmd).ExecuteReaderAsync();
-       }
-       catch (Exception ex)
-       {
-         ThrowException(ex);
-       }
-       return null;
-     }*/
+    
+    public override async Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
+    {
+     // throw new NotImplementedException("ExecuteReaderAsync для PostgreSQL временно отключен");
+      if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+      LastSQL = cmd.CommandText;
+      try
+      {
+        return await ((NpgsqlCommand)cmd).ExecuteReaderAsync();
+      }
+      catch (Exception ex)
+      {
+        ThrowException(ex);
+      }
+      return null;
+    }
     #endregion
     #endregion
   }
