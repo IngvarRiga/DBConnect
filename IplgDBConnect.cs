@@ -9,10 +9,13 @@ namespace plgDBConnect
 {
   /// <summary>
   /// Типы интерфейсов с базами данных
+  /// 0 - PostgreSQL
+  /// 1 - SQLite
+  /// 2 - FireBird
   /// </summary>
-  public enum DBInterfaceType { PostgreSQL, SQLite, FireBird };
+  public enum DBInterfaceType { Unknown = -1, PostgreSQL, SQLite, FireBird };
   /// <summary>
-  /// Статус сервера, обычный или встраиваемый
+  /// Статус сервера, обычный или встраиваемый (последний только для FireBird)
   /// </summary>
   public enum DBServerStateType { Standart, Embedded };
   /// <summary>
@@ -40,10 +43,10 @@ namespace plgDBConnect
     public abstract IDbCommand GetSQLCommand(string SQL);
 
     /// <summary>
-    /// Установка значения параметра сформированной SQL-соманды перед ее выполнением
+    /// Установка значения параметра сформированной SQL-команды перед ее выполнением
     /// </summary>
     /// <param name="Cmd">Сформированная команда, содержащая в составе параметры заданные в виде @PARNAME</param>
-    /// <param name="ParamName">Имя параметра с лидирующим амперсанда (@)</param>
+    /// <param name="ParamName">Имя параметра с лидирующим амперсанда @</param>
     /// <param name="Val">Значение параметра</param>
     public abstract void AddParametersValue(IDbCommand Cmd, string ParamName, object Val);
 

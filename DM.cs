@@ -1,7 +1,7 @@
 ﻿//-- ветвление условной компиляции
-#define POSTGRESQL
-//#define FIREBIRD
-#define SQLITE
+#define POSTGRESQL //-- подключение PostgreSQL
+//#define FIREBIRD //-- подключение FireBird
+#define SQLITE //-- подключение SQLite
 
 using System;
 using System.Data;
@@ -9,42 +9,74 @@ using System.Data;
 namespace plgDBConnect
 {
   /// <summary>
-  /// Класс, описывающий ОДНО соединение с базой данных. По его параметрам будет формироваться объект
+  /// Класс, описывающий ОДНО соединение с базой данных. По его параметрам будет формироваться объект соединения с БД. Обратите внимание, что
+  /// сам по себе объект коннектора НЕ является соединением, а просто содержит параметры для соединения с БД.
   /// </summary>
   public class Connector
   {
     /// <summary>
-    /// тип соединения
+    /// Тип соединения
     /// </summary>
-    public DBInterfaceType fConnectType { get; set; }
+    public DBInterfaceType ConnectType { get; set; }
     /// <summary>
     /// Тип сервера
     /// </summary>
-    public DBServerStateType fServerStateType { get; set; }
+    public DBServerStateType ServerStateType { get; set; }
     /// <summary>
-    /// имя базы данных или файла базы данных 
+    /// Имя базы данных или файла базы данных 
     /// </summary>
-    public string fDB { get; set; } 
+    public string DB_Name { get; set; } 
     /// <summary>
-    /// Пароль
+    /// Пароль для соединения с базой данных
     /// </summary>
-    public string fpass { get; set; } //-- пароль
+    public string DB_Password { get; set; } //-- пароль
     /// <summary>
-    /// имя компьютера или IP адрес сервера, "localhost" - сервер на локальной машине
+    /// Имя компьютера или IP адрес сервера, "localhost" - сервер на локальной машине
     /// </summary>
-    public string fHost { get; set; }
+    public string DB_Host { get; set; }
     /// <summary>
-    /// порт, по которому сервер слушает обращение к себе
+    /// Порт, по которому сервер слушает обращение к себе
     /// </summary>
-    public int fPort { get; set; } 
+    public int DB_Port { get; set; } 
     /// <summary>
-    /// пользователь, под которым производится соединение
+    /// Пользователь, под которым производится соединение
     /// </summary>
-    public string fuser { get; set; }
+    public string DB_User { get; set; }
     /// <summary>
-    /// максимальное время ожидания ответа сервера
+    /// Максимальное время ожидания ответа сервера (секунд)
     /// </summary>
-    public int fTimeout { get; set; } 
+    public int DB_Timeout { get; set; }
+    /// <summary>
+    /// Создание объекта коннектора с параметрами по умолчанию
+    /// </summary>
+    public Connector()
+    {
+      //-- неизвестный тип сервера
+      ConnectType = DBInterfaceType.Unknown;
+      //-- стандартный (только FireBird использует тип Embedded)
+      ServerStateType = DBServerStateType.Standart;
+      //-- время ожидания = 2 минуты
+      DB_Timeout = 120;
+    }
+
+    /// <summary>
+    /// Клонирование параметров текущего коннектора в новом объекте
+    /// </summary>
+    /// <returns>Вновь созданный объект коннектора</returns>
+    public Connector Clone()
+    {
+      return new Connector
+      {
+        ConnectType = ConnectType,
+        ServerStateType = ServerStateType,
+        DB_Host = DB_Host,
+        DB_Name = DB_Name,
+        DB_Password = DB_Password,
+        DB_Port = DB_Port,
+        DB_Timeout = DB_Timeout,
+        DB_User = DB_User
+      };
+    }
   }
 
   /// <summary>
@@ -59,15 +91,15 @@ namespace plgDBConnect
     /*
      Под основным коннектором подразумевается соединение с базой данных, которая является основной (приоритетной) при работе с программой,
      что, в большинстве случаев и происходит. Т.е. программа работает только с одной конкретной базой данных. Однако, в некоторых случаях
-     необходимо чтобы программа могла одновременно обращаться сразу к нескольким базам, причем возморно и разного типа (разные СУБД), в этом случае
-     можно создавать любое количество коннекторов и использовать их так как посчитаете нужным. Более того, Основной коннектор может вообще не использоваться
+     необходимо чтобы программа могла одновременно обращаться сразу к нескольким базам, причем возможно и разного типа (разные СУБД), в этом случае
+     можно создавать любое количество коннекторов и использовать их так как посчитаете нужным. Более того, основной коннектор может вообще не использоваться
      (он сделан просто для своего удобства, чтобы можно было задавать значения параметров по умолчанию), вместо него можно просто
      создавать любое количество вторичных коннекторов и управлять их существованием самостоятельно.
-       */
+    */
     /// <summary>
     /// Экземпляр основного коннектора.
     /// </summary>
-    private static Connector MainDB = new Connector();
+    private static readonly Connector MainDB = new Connector();
  
     /// <summary>
     /// Инициализация данных основного соединения с БД (которое будет использоваться по умолчанию в случае соединения с несколькими БД)
@@ -80,7 +112,7 @@ namespace plgDBConnect
     /// <param name="user">Пользователь, под которым производится соединение</param>
     /// <param name="Timeout">Максимальное время ожидания ответа сервера</param>
     /// <param name="ServerStateType">Задает тип используюемого сервера Стандартный или встраиваемый (имеет значение только для FireBird)</param>
-    /// <param name="mainDB">true (по умолчанию) - задает параметры соединения с основной БД, которые сохраняются внутри класса (фнункция возвращает null). false - задает параметры соединения
+    /// <param name="mainDB">true (по умолчанию) - задает параметры соединения с основной БД, которые сохраняются внутри класса (функция возвращает null). false - задает параметры соединения
     /// с вторичной БД, при этом настроенный коннектор возвращается функцией</param>
     public static Connector Init(DBInterfaceType ConnectType,
       string DB,
@@ -95,14 +127,14 @@ namespace plgDBConnect
     {
       if (mainDB)
       {
-        MainDB.fTimeout = Timeout;
-        MainDB.fConnectType = ConnectType;
-        MainDB.fDB = DB;
-        MainDB.fpass = pass;
-        MainDB.fHost = Host;
-        MainDB.fPort = Port;
-        MainDB.fuser = user;
-        MainDB.fServerStateType = ServerStateType;
+        MainDB.DB_Timeout = Timeout;
+        MainDB.ConnectType = ConnectType;
+        MainDB.DB_Name = DB;
+        MainDB.DB_Password = pass;
+        MainDB.DB_Host = Host;
+        MainDB.DB_Port = Port;
+        MainDB.DB_User = user;
+        MainDB.ServerStateType = ServerStateType;
         //-- данные соединения с основной базой данных хранятся внутри статического экземпляра
         //-- и используются по умолчанию, если не задается параметр Connector в вызывающих функциях
         return MainDB;
@@ -111,18 +143,27 @@ namespace plgDBConnect
       {
         return new Connector()
         {
-          fTimeout = Timeout,
-          fConnectType = ConnectType,
-          fDB = DB,
-          fpass = pass,
-          fHost = Host,
-          fPort = Port,
-          fuser = user,
-          fServerStateType = ServerStateType
+          DB_Timeout = Timeout,
+          ConnectType = ConnectType,
+          DB_Name = DB,
+          DB_Password = pass,
+          DB_Host = Host,
+          DB_Port = Port,
+          DB_User = user,
+          ServerStateType = ServerStateType
         };
       }
     }
 
+    /// <summary>
+    /// Возвращает объект коннектора основного соединения.
+    /// </summary>
+    /// <returns></returns>
+    public static Connector GetMainBD()
+    {
+      return MainDB;
+    }
+    
     /// <summary>
     /// Получение эксклюзивного соединения с БД, для выполнения необходимых операций
     /// </summary>
@@ -135,20 +176,22 @@ namespace plgDBConnect
       if (con == null) con = MainDB;
 
       //-- если коннектор задан...
-      switch (con.fConnectType)
+      switch (con.ConnectType)
       {
+        case DBInterfaceType.Unknown:
+          throw new ArgumentException("Тип соединения заявлен как Unknown (неизвестный). С каким типом сервера соединяться - непонятно.");
         case DBInterfaceType.PostgreSQL:
-          return new plgPGConnect(con.fHost, con.fDB, con.fPort, con.fuser, con.fpass, ErrorTime);
+          return new plgPGConnect(con.DB_Host, con.DB_Name, con.DB_Port, con.DB_User, con.DB_Password, ErrorTime);
 /*
   #if FIREBIRD
           //-- FireBird не используется в проектах, поэтому исключен из решения. Более того, не смотря на то, что исходник остался
           //-- он требует доработки, в соответсвии с новым интерфейсом. см. пример в plgPGConnect.cs
         case DBInterfaceType.FireBird:
-          return new plgFBConnect(con.fDB, con.fuser, con.fpass, con.fServerStateType);
+          return new plgFBConnect(con.DB_Name, con.DB_User, con.DB_Password, con.ServerStateType);
 #endif
 */
         case DBInterfaceType.SQLite:
-          return new plgSQLiteConnect(con.fDB, con.fpass, ErrorTime);
+          return new plgSQLiteConnect(con.DB_Name, con.DB_Password, ErrorTime);
         default:
           return null;
       }
@@ -162,15 +205,16 @@ namespace plgDBConnect
     {
       return LastSQL;
     }
+
     /// <summary>
     /// Функция загрузки или обновления содержимого всей таблицы. При обновлении сперва уничтожаются все данные, которые находятся в таблице
     /// Транзакция задается внутри фукнции, т.е. запрос выполняется внутри своей транзакции
     /// </summary>
     /// <param name="Table">Таблица</param>
     /// <param name="SQL">Запрос, возвращающий данные в таблицу</param>
-    public static bool FillTable( DataTable Table, string SQL, Connector con=null)
+    /// <param name="con">Коннектор, через который будет выполнена операция</param>
+    public static void FillTable( DataTable Table, string SQL, Connector con=null)
     {
-      var res = true;
       Table.BeginLoadData();
       if (con == null) con = MainDB;
       LastSQL = SQL;
@@ -186,19 +230,12 @@ namespace plgDBConnect
             tr.Rollback();
           }
         }
-        catch (Exception ex)
-        {
-          res = false;
-          //-- передаем обработку ошибок вызывающей программе
-          throw ex;
-        }
         finally
         {
           db.Close();
         }
       }
       Table.EndLoadData();
-      return res;
     }
 
     /// <summary>
@@ -222,11 +259,11 @@ namespace plgDBConnect
             tr.Commit();
           }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
           db.Rollback();
           //-- передаем обработку ошибок вызывающей программе
-          throw ex;
+          throw;
         }
         finally
         {
@@ -245,7 +282,7 @@ namespace plgDBConnect
       if (con == null) con = MainDB;
       LastSQL = SQL.CommandText;
 
-      using (var db = GetConnect(con))
+      using (var db = GetConnect(con, ErrorTime))
       {
         try
         {
@@ -256,11 +293,11 @@ namespace plgDBConnect
             tr.Commit();
           }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
           db.Rollback();
           //-- передаем обработку ошибок вызывающей программе
-          throw ex;
+          throw;
         }
         finally
         {
@@ -274,12 +311,13 @@ namespace plgDBConnect
     /// </summary>
     /// <param name="SQL">Текст SQL запроса</param>
     /// <param name="con">Активный коннектор, если не задан - используется основной, инициализируемый через Init</param>
-    public static object ExecuteScalar(string SQL, Connector con=null )
+    /// <param name="ErrorTime">Таймаут выполнения, по умолчанию = 120 секунд, но иногда требуется и больше</param>
+    public static object ExecuteScalar(string SQL, Connector con=null, int ErrorTime = 120)
     {
-      object obj = null;
+      object obj;
       if (con == null) con = MainDB;
       LastSQL = SQL;
-      using (var db = GetConnect(con))
+      using (var db = GetConnect(con, ErrorTime))
       {
         try
         {
@@ -289,12 +327,11 @@ namespace plgDBConnect
             obj = db.ExecuteScalar(SQL, tr);
           }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
           db.Rollback();
-          obj = null;
           //-- передаем обработку ошибок вызывающей программе
-          throw ex;
+          throw;
         }
         finally
         {
@@ -309,12 +346,13 @@ namespace plgDBConnect
     /// </summary>
     /// <param name="SQL">Текст SQL запроса</param>
     /// <param name="con">Активный коннектор, если не задан - используется основной, инициализируемый через Init</param>
-    public static object ExecuteScalar(IDbCommand SQL, Connector con=null )
+    /// <param name="ErrorTime">Таймаут выполнения, по умолчанию = 120 секунд, но иногда требуется и больше</param>
+    public static object ExecuteScalar(IDbCommand SQL, Connector con=null, int ErrorTime = 120)
     {
-      object obj = null;
+      object obj;
       if (con == null) con = MainDB;
       LastSQL = SQL.CommandText;
-      using (var db = GetConnect(con))
+      using (var db = GetConnect(con, ErrorTime))
       {
         try
         {
@@ -324,12 +362,11 @@ namespace plgDBConnect
             obj = db.ExecuteScalar(SQL, tr);
           }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
           db.Rollback();
-          obj = null;
           //-- передаем обработку ошибок вызывающей программе
-          throw ex;
+          throw;
         }
         finally
         {
