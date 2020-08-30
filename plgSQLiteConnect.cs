@@ -48,7 +48,7 @@ namespace plgDBConnect
         /// <inheritdoc/>
         public plgSQLiteConnect(
           string DB, //-- пользователь, под которым производится соединение
-          string pass, //-- пароль раскодирования БД
+          string pass, //-- пароль декодирования БД
           int Timeout = 120)
         {
             //-- инициализация необходимых переменных
@@ -63,7 +63,7 @@ namespace plgDBConnect
             // csb.SyncNotification = true; //--
             if (!string.IsNullOrEmpty(pass))
             {
-                csb.Password = pass; //-- Пароль кодирования / раскодирования БД
+                csb.Password = pass; //-- Пароль кодирования / декодирования БД
             }
             //-- инициализация строки подключения к базе данных
             ConnectString = csb.ToString();
@@ -271,7 +271,7 @@ namespace plgDBConnect
 
 
         /// <inheritdoc/>
-        public override int ExecuteNonQuery(IDbCommand cmd, IDbTransaction tr = null)
+        public override int ExecuteNonQuery(IDbCommand cmd, IDbTransaction tr)
         {
             var res = -1;
             if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
@@ -290,7 +290,7 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override int ExecuteNonQuery(string SQL, IDbTransaction tr = null)
+        public override int ExecuteNonQuery(string SQL, IDbTransaction tr)
         {
             var Res = -1;
             if (string.IsNullOrEmpty(SQL)) throw new DBConnectException(Properties.Resources.errCommandNotDefined);
@@ -312,7 +312,7 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override object ExecuteScalar(string SQL, IDbTransaction tr = null)
+        public override object ExecuteScalar(string SQL, IDbTransaction tr)
         {
             object Res = null;
             if (string.IsNullOrEmpty(SQL)) throw new DBConnectException(Properties.Resources.errCommandNotDefined);
@@ -334,7 +334,7 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override object ExecuteScalar(IDbCommand Cmd, IDbTransaction tr = null)
+        public override object ExecuteScalar(IDbCommand Cmd, IDbTransaction tr)
         {
             object res = null;
             if (Cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
@@ -353,10 +353,11 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override IDataReader ExecuteReader(IDbCommand cmd)
+        public override IDataReader ExecuteReader(IDbCommand cmd, IDbTransaction tr)
         {
             IDataReader res = null;
             if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+            cmd.Transaction = tr ?? throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
             LastSQL = cmd.CommandText;
             try
             {
@@ -388,9 +389,10 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override async Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
+        public override async Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd, IDbTransaction tr)
         {
             if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+            cmd.Transaction = tr ?? throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
             LastSQL = cmd.CommandText;
             try
             {

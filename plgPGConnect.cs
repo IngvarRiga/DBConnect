@@ -28,7 +28,7 @@ namespace plgDBConnect
         /// </summary>
         private NpgsqlTransaction tr;
         /// <summary>
-        /// Строка, содержащая последний выполненный запрос. Используется при отладке ошибок, чтобы понять, какой именно запрос вызвал ошибку.
+        /// Строка, содержащая последний выполненный (или нет) запрос. Используется при отладке ошибок, чтобы понять, какой именно запрос вызвал ошибку.
         /// </summary>
         private string LastSQL;
         /// <summary>
@@ -58,12 +58,12 @@ namespace plgDBConnect
         /// <summary>
         /// Конструктор класса сразу инициализирует соединение с БД 
         /// </summary>
-        /// <param name="Host">The host.</param>
-        /// <param name="DB">The database.</param>
-        /// <param name="Port">The port.</param>
-        /// <param name="user">The user.</param>
-        /// <param name="pass">The pass.</param>
-        /// <param name="Timeout">The timeout.</param>
+        /// <param name="Host">Хост на котором расположена база данных. Может задаваться как IP адрес</param>
+        /// <param name="DB">Имя базы данных</param>
+        /// <param name="Port">Номер порта, по которому сервер принимает запросы (по умолчанию 5432)</param>
+        /// <param name="user">Имя пользователя</param>
+        /// <param name="pass">Пароль</param>
+        /// <param name="Timeout">Таймаут в секундах для ожидания ответа от сервера</param>
         public plgPGConnect(
           string Host, //-- имя компьютера или IP адрес сервера, "localhost" - сервер на локальной машине
           string DB, //-- имя базы данных или файла базы данных 
@@ -144,14 +144,15 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override long FillDataTable(DataTable tbl, IDbCommand Cmd, IDbTransaction tr = null)
+        public override long FillDataTable(DataTable tbl, IDbCommand Cmd, IDbTransaction tr)
         {
             long res = -1;
             if (tbl == null) throw new DBConnectException(Properties.Resources.errDataTableNotDefined);
             if (Cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+            if (tr == null) throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
             //-- перед заполнением таблицы - очистка
             tbl.Clear();
-            Cmd.Transaction = tr ?? throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
+            Cmd.Transaction = tr;
             try
             {
                 LastSQL = Cmd.CommandText;
@@ -168,7 +169,7 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override long FillDataTable(DataTable tbl, string Cmd, IDbTransaction tr = null)
+        public override long FillDataTable(DataTable tbl, string Cmd, IDbTransaction tr)
         {
             long res = -1;
             if (tbl == null) throw new DBConnectException(Properties.Resources.errDataTableNotDefined);
@@ -196,7 +197,8 @@ namespace plgDBConnect
         /// <inheritdoc/>
         public override IDbTransaction BeginTransaction()
         {
-            if (db?.State == ConnectionState.Closed) return null;
+            if (db?.State == ConnectionState.Closed)
+                throw new DBConnectException(Properties.Resources.errDataBaseNotConnected);
             tr = db.BeginTransaction();
             return tr;
         }
@@ -207,7 +209,8 @@ namespace plgDBConnect
         /// </summary>
         public override void Commit()
         {
-            if (db?.State == ConnectionState.Closed) return;
+            if (db?.State == ConnectionState.Closed)
+                throw new DBConnectException(Properties.Resources.errDataBaseNotConnected);
             if (tr?.Connection != null)
             {
                 tr.Commit();
@@ -221,13 +224,12 @@ namespace plgDBConnect
         /// </summary>
         public override void Rollback()
         {
-            if (db?.State != ConnectionState.Closed)
+            if (db?.State == ConnectionState.Closed)
+                throw new DBConnectException(Properties.Resources.errDataBaseNotConnected);
+            if (tr?.Connection != null)
             {
-                if (tr?.Connection != null)
-                {
-                    tr.Rollback();
-                    tr.Dispose();
-                }
+                tr.Rollback();
+                tr.Dispose();
             }
         }
 
@@ -253,9 +255,9 @@ namespace plgDBConnect
         /// </summary>
         public override void Close()
         {
-            Rollback();
             if (db?.State == ConnectionState.Open)
             {
+                Rollback();
                 db.Close();
             }
         }
@@ -273,7 +275,7 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override int ExecuteNonQuery(IDbCommand cmd, IDbTransaction tr = null)
+        public override int ExecuteNonQuery(IDbCommand cmd, IDbTransaction tr)
         {
             var res = -1;
             if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
@@ -292,7 +294,7 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override int ExecuteNonQuery(string SQL, IDbTransaction tr = null)
+        public override int ExecuteNonQuery(string SQL, IDbTransaction tr)
         {
             var Res = -1;
             if (string.IsNullOrEmpty(SQL)) throw new DBConnectException(Properties.Resources.errCommandNotDefined);
@@ -314,7 +316,7 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override object ExecuteScalar(string SQL, IDbTransaction tr = null)
+        public override object ExecuteScalar(string SQL, IDbTransaction tr)
         {
             object Res = null;
             if (string.IsNullOrEmpty(SQL)) throw new DBConnectException(Properties.Resources.errCommandNotDefined);
@@ -336,7 +338,7 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override object ExecuteScalar(IDbCommand Cmd, IDbTransaction tr = null)
+        public override object ExecuteScalar(IDbCommand Cmd, IDbTransaction tr)
         {
             object res = null;
             if (Cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
@@ -355,10 +357,11 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override IDataReader ExecuteReader(IDbCommand cmd)
+        public override IDataReader ExecuteReader(IDbCommand cmd, IDbTransaction tr)
         {
             IDataReader res = null;
             if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+            cmd.Transaction = tr ?? throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
             LastSQL = cmd.CommandText;
             try
             {
@@ -391,10 +394,10 @@ namespace plgDBConnect
         }
 
         /// <inheritdoc/>
-        public override async Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd)
+        public override async Task<DbDataReader> ExecuteReaderAsync(IDbCommand cmd, IDbTransaction tr)
         {
-            // throw new NotImplementedException("ExecuteReaderAsync для PostgreSQL временно отключен");
             if (cmd == null) throw new DBConnectException(Properties.Resources.errCommandNotFormed);
+            cmd.Transaction = tr ?? throw new DBConnectException(Properties.Resources.errTransactionNotDefined);
             LastSQL = cmd.CommandText;
             try
             {

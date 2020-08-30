@@ -106,6 +106,15 @@ namespace plgDBConnect.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Параметра {0} нет в запросе..
+        /// </summary>
+        public static string errParametrNotPresent {
+            get {
+                return ResourceManager.GetString("errParametrNotPresent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Транзакция для запроса не задана..
         /// </summary>
         public static string errTransactionNotDefined {

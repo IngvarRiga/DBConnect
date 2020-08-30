@@ -132,6 +132,9 @@
   <data name="errParametrAlreadyDefined" xml:space="preserve">
     <value>Дублирование параметра "{0}". Такой параметр уже задан.</value>
   </data>
+  <data name="errParametrNotPresent" xml:space="preserve">
+    <value>Параметра {0} нет в запросе.</value>
+  </data>
   <data name="errTransactionNotDefined" xml:space="preserve">
     <value>Транзакция для запроса не задана.</value>
   </data>
